@@ -7,23 +7,43 @@
 {#if adData}
 	<div class="story-container">
 		<!-- Header with advertiser info -->
-		<div class="story-header">
-			{#if adData.advertiser.profileImage}
-				<img
-					src={adData.advertiser.profileImage}
-					alt={adData.advertiser.name}
-					class="profile-image"
-				/>
-			{:else}
-				<div class="profile-placeholder">
-					{adData.advertiser.name.charAt(0).toUpperCase()}
+		{#if adData.advertiser.pageUrl}
+			<a href={adData.advertiser.pageUrl} target="_blank" rel="noopener noreferrer" class="story-header">
+				{#if adData.advertiser.profileImage}
+					<img
+						src={adData.advertiser.profileImage}
+						alt={adData.advertiser.name}
+						class="profile-image"
+					/>
+				{:else}
+					<div class="profile-placeholder">
+						{adData.advertiser.name.charAt(0).toUpperCase()}
+					</div>
+				{/if}
+				<div class="advertiser-info">
+					<span class="advertiser-name">{adData.advertiser.name}</span>
+					<span class="sponsored-label">Sponsored</span>
 				</div>
-			{/if}
-			<div class="advertiser-info">
-				<span class="advertiser-name">{adData.advertiser.name}</span>
-				<span class="sponsored-label">Sponsored</span>
+			</a>
+		{:else}
+			<div class="story-header">
+				{#if adData.advertiser.profileImage}
+					<img
+						src={adData.advertiser.profileImage}
+						alt={adData.advertiser.name}
+						class="profile-image"
+					/>
+				{:else}
+					<div class="profile-placeholder">
+						{adData.advertiser.name.charAt(0).toUpperCase()}
+					</div>
+				{/if}
+				<div class="advertiser-info">
+					<span class="advertiser-name">{adData.advertiser.name}</span>
+					<span class="sponsored-label">Sponsored</span>
+				</div>
 			</div>
-		</div>
+		{/if}
 
 		<!-- Media content -->
 		<div class="story-media">
@@ -89,6 +109,13 @@
 		gap: 12px;
 		background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
 		z-index: 10;
+		text-decoration: none;
+		color: inherit;
+		transition: opacity 0.2s;
+	}
+
+	a.story-header:hover {
+		opacity: 0.9;
 	}
 
 	.profile-image {

@@ -1,6 +1,7 @@
 export interface AdvertiserInfo {
   name: string;
   profileImage: string | null;
+  pageUrl: string | null;
 }
 
 export interface CreativeContent {

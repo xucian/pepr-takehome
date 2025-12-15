@@ -4,8 +4,8 @@ import type { AdData } from './types.js';
 export function parseAdHtml(html: string): AdData {
   const $ = cheerio.load(html);
 
-  // Extract advertiser name
-  const advertiserName = extractAdvertiserName($);
+  // Extract advertiser info
+  const { name: advertiserName, pageUrl } = extractAdvertiserInfo($);
 
   // Extract profile image
   const profileImage = extractProfileImage($);
@@ -26,6 +26,7 @@ export function parseAdHtml(html: string): AdData {
     advertiser: {
       name: advertiserName,
       profileImage,
+      pageUrl,
     },
     creative: {
       mediaType,
@@ -41,29 +42,30 @@ export function parseAdHtml(html: string): AdData {
   };
 }
 
-function extractAdvertiserName($: cheerio.CheerioAPI): string {
+function extractAdvertiserInfo($: cheerio.CheerioAPI): { name: string; pageUrl: string | null } {
   // Strategy: Find links to facebook.com/[advertiser] - this is always the brand
-  const candidates: string[] = [];
+  let advertiserName = 'Unknown Advertiser';
+  let pageUrl: string | null = null;
 
   $('a[href*="facebook.com/"]').each((_, elem) => {
     const href = $(elem).attr('href');
     const text = $(elem).text().trim();
 
-    // Extract brand name from URL or link text
-    if (href && !href.includes('/ads/library')) {
+    // Extract brand name and URL
+    if (href && !href.includes('/ads/library') && !pageUrl) {
       // Try to get text from the link itself
       if (text && text.length > 0 && text.length < 50) {
-        candidates.push(text);
+        const excludeTexts = ['Ad Library', 'Sponsored', 'See more', 'Learn more'];
+        if (!excludeTexts.includes(text)) {
+          advertiserName = text;
+          pageUrl = href;
+          return false; // Break out of loop
+        }
       }
     }
   });
 
-  // Filter out common UI text
-  const filtered = candidates.filter(name =>
-    !['Ad Library', 'Sponsored', 'See more', 'Learn more'].includes(name)
-  );
-
-  return filtered[0] || 'Unknown Advertiser';
+  return { name: advertiserName, pageUrl };
 }
 
 function extractProfileImage($: cheerio.CheerioAPI): string | null {
@@ -186,8 +188,9 @@ function extractAdText($: cheerio.CheerioAPI): string {
 
 function extractCta($: cheerio.CheerioAPI): string | null {
   // Strategy: Find short actionable text in [role="button"] elements
-  const ctaPatterns = /^(Shop|Learn|Sign|Get|Download|Book|Buy|Join|Watch|Play|Start|See|View|Discover|Explore|Try|Order)/i;
+  const ctaPatterns = /^(Shop|Learn|Sign|Get|Download|Book|Buy|Join|Watch|Play|Start|View|Discover|Explore|Try|Order)/i;
   const validCtas = ['Shop Now', 'Learn More', 'Sign Up', 'Get Started', 'Download', 'Book Now', 'Order now', 'Order Now'];
+  const excludeCtas = ['SEE AD DETAILS', 'See ad details', 'MCDONALDS.COM'];
 
   // Look specifically in role="button" divs
   const buttons = $('[role="button"]');
@@ -195,7 +198,12 @@ function extractCta($: cheerio.CheerioAPI): string | null {
   for (let i = 0; i < buttons.length; i++) {
     const text = $(buttons[i]).text().trim();
 
-    // CTA is short (5-25 chars) and actionable
+    // Skip Instagram UI elements
+    if (excludeCtas.some(exclude => text.toUpperCase().includes(exclude.toUpperCase()))) {
+      continue;
+    }
+
+    // CTA is short (3-25 chars) and actionable
     if (text &&
         text.length >= 3 &&
         text.length <= 25 &&
