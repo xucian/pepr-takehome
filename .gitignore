@@ -13,3 +13,7 @@ build/
 # IDE
 .vscode/
 .idea/
+
+# shai-hulud scanner script caches
+shai-hulud-report.csv
+scripts/.cache

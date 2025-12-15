@@ -2,7 +2,9 @@
   "name": "instagram-mirror",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
+    "preinstall": "node scripts/shai-hulud-scanner-enhanced.js . --fail-on=critical --depth=10 --full-scan --no-cache --no-upload --no-report",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
