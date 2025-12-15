@@ -1,15 +1,22 @@
 # Quick Start Guide
 
-## 🚀 Get Started in 1 Minute
+## 🚀 Get Started in 2 Minutes
 
-### One Command:
+### Step 1: Install (one time)
+```bash
+./install.sh
+```
+
+This installs all dependencies, sets up NVM (if available), creates .env files.
+
+### Step 2: Run
 ```bash
 ./run.sh
 ```
 
 That's it! Both servers start automatically.
 
-✅ Backend ready at `http://localhost:3000`
+✅ Backend ready at `http://localhost:3002`
 ✅ Frontend ready at `http://localhost:5173`
 
 ### Alternative (Manual):
@@ -32,7 +39,7 @@ cd frontend && npm run dev
 ## 📁 Project Structure
 ```
 instagram-mirror/
-├── backend/          # Express API (port 3000)
+├── backend/          # Express API (port 3002)
 │   └── src/
 │       ├── server.ts
 │       ├── parser.ts
@@ -79,10 +86,10 @@ npm run preview  # Preview production build
 
 ## 🧪 Quick API Test
 ```bash
-curl http://localhost:3000/health
+curl http://localhost:3002/health
 # {"status":"ok"}
 
-curl -X POST http://localhost:3000/api/parse-ad \
+curl -X POST http://localhost:3002/api/parse-ad \
   -H "Content-Type: application/json" \
   -d '{"html":"<img src=\"https://example.com/ad.jpg\" />"}'
 # Returns structured ad data

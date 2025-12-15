@@ -42,54 +42,64 @@ export function parseAdHtml(html: string): AdData {
 }
 
 function extractAdvertiserName($: cheerio.CheerioAPI): string {
-  // Try multiple selectors for advertiser name
-  const selectors = [
-    '[data-testid="page-name"]',
-    '.x1lliihq.x1plvlek.xryxfnj.x1n2onr6.x1ji3w43.x18d9i69.xkhd6sd.x1a2a7pz.x193iq5w.xeuugli.x1ay05ga.x1y1aw1k.x1sxyh0.xwib8y2.xurb0ha',
-    'a[role="link"] span',
-    '.x193iq5w span',
-  ];
+  // Strategy: Find links to facebook.com/[advertiser] - this is always the brand
+  const candidates: string[] = [];
 
-  for (const selector of selectors) {
-    const name = $(selector).first().text().trim();
-    if (name && name.length > 0 && name !== 'Ad Library') {
-      return name;
+  $('a[href*="facebook.com/"]').each((_, elem) => {
+    const href = $(elem).attr('href');
+    const text = $(elem).text().trim();
+
+    // Extract brand name from URL or link text
+    if (href && !href.includes('/ads/library')) {
+      // Try to get text from the link itself
+      if (text && text.length > 0 && text.length < 50) {
+        candidates.push(text);
+      }
     }
-  }
+  });
 
-  return 'Unknown Advertiser';
+  // Filter out common UI text
+  const filtered = candidates.filter(name =>
+    !['Ad Library', 'Sponsored', 'See more', 'Learn more'].includes(name)
+  );
+
+  return filtered[0] || 'Unknown Advertiser';
 }
 
 function extractProfileImage($: cheerio.CheerioAPI): string | null {
-  // Try to find profile/advertiser image
-  const selectors = [
-    'img[data-imgperflogname="profileCoverPhoto"]',
-    'img[alt*="profile"]',
-    'image[role="img"]',
-  ];
+  // Strategy: Profile images are the SMALLEST images (typically 40x40, 50x50, 60x60)
+  interface ImageCandidate {
+    src: string;
+    size: number; // width * height
+  }
 
-  for (const selector of selectors) {
-    const src = $(selector).first().attr('src') || $(selector).first().attr('xlink:href');
-    if (src && isValidImageUrl(src, ['emoji'])) {
-      return src;
+  const images: ImageCandidate[] = [];
+
+  $('img').each((_, elem) => {
+    const src = $(elem).attr('src');
+    if (!src || !src.startsWith('http')) return;
+
+    // Try to parse dimensions from URL (e.g., s60x60, 40x40)
+    const dimensionMatch = src.match(/[_s](\d+)x(\d+)/);
+    if (dimensionMatch) {
+      const width = parseInt(dimensionMatch[1]);
+      const height = parseInt(dimensionMatch[2]);
+      const size = width * height;
+
+      // Profile pics are small (less than 100x100)
+      if (size < 10000) {
+        images.push({ src, size });
+      }
     }
+  });
+
+  // Return the smallest image (likely the profile pic)
+  if (images.length > 0) {
+    images.sort((a, b) => a.size - b.size);
+    return images[0].src;
   }
 
   return null;
-}
-
-function isValidImageUrl(url: string, excludePatterns: string[] = []): boolean {
-  if (!url || !url.startsWith('http')) return false;
-
-  // Check if URL path (not domain) contains excluded patterns
-  try {
-    const urlObj = new URL(url);
-    const pathAndQuery = urlObj.pathname + urlObj.search;
-    return !excludePatterns.some(pattern => pathAndQuery.toLowerCase().includes(pattern));
-  } catch {
-    // If URL parsing fails, fall back to simple check
-    return !excludePatterns.some(pattern => url.toLowerCase().includes(pattern));
-  }
 }
 
 function extractMedia($: cheerio.CheerioAPI): { mediaType: 'image' | 'video'; mediaUrl: string } {
@@ -99,73 +109,101 @@ function extractMedia($: cheerio.CheerioAPI): { mediaType: 'image' | 'video'; me
     return { mediaType: 'video', mediaUrl: video };
   }
 
-  // Look for images - prioritize larger content images
-  const imgSelectors = [
-    'img[data-visualcompletion="media-vc-image"]',
-    'img[referrerpolicy="origin-when-cross-origin"]',
-    'div[data-visualcompletion="media-vc-image"] img',
-    'img[src*="scontent"]',
-  ];
-
-  for (const selector of imgSelectors) {
-    const src = $(selector).first().attr('src');
-    if (src && isValidImageUrl(src, ['emoji', '/profile'])) {
-      return { mediaType: 'image', mediaUrl: src };
-    }
+  // Strategy: Main creative is the LARGEST image
+  interface ImageCandidate {
+    src: string;
+    size: number;
   }
 
-  // Fallback: find any substantial image
-  const allImages = $('img');
-  for (let i = 0; i < allImages.length; i++) {
-    const src = $(allImages[i]).attr('src');
-    if (src && isValidImageUrl(src, ['emoji'])) {
-      return { mediaType: 'image', mediaUrl: src };
+  const images: ImageCandidate[] = [];
+
+  $('img').each((_, elem) => {
+    const src = $(elem).attr('src');
+    if (!src || !src.startsWith('http')) return;
+
+    // Parse dimensions from URL
+    const dimensionMatch = src.match(/[_s](\d+)x(\d+)/);
+    if (dimensionMatch) {
+      const width = parseInt(dimensionMatch[1]);
+      const height = parseInt(dimensionMatch[2]);
+      const size = width * height;
+
+      // Main creative is large (typically 600x600 or larger)
+      if (size >= 100000) {
+        images.push({ src, size });
+      }
+    } else {
+      // If no dimensions in URL, check referrerpolicy (main images often have this)
+      const refPolicy = $(elem).attr('referrerpolicy');
+      if (refPolicy === 'origin-when-cross-origin') {
+        // Assume it's large
+        images.push({ src, size: 999999 });
+      }
     }
+  });
+
+  // Return the largest image
+  if (images.length > 0) {
+    images.sort((a, b) => b.size - a.size);
+    return { mediaType: 'image', mediaUrl: images[0].src };
   }
 
   throw new Error('No media content found in HTML');
 }
 
 function extractAdText($: cheerio.CheerioAPI): string {
-  // Look for ad copy/text
-  const textSelectors = [
-    '[data-ad-preview="message"]',
-    'div[dir="auto"] span',
-    '.xdj266r span',
-    'div[style*="text-align"] span',
+  // Strategy: Look for spans NOT inside buttons/links - these contain ad copy
+  const texts: string[] = [];
+  const excludeTexts = [
+    'Sponsored', 'Active', 'Library ID', 'Started running', 'Platforms',
+    'See ad details', 'Ad Library', 'MCDONALDS.COM', '.COM'
   ];
 
-  const MIN_TEXT_LENGTH = 10;
-  const texts: string[] = [];
+  $('span').each((_, elem) => {
+    const $elem = $(elem);
 
-  for (const selector of textSelectors) {
-    $(selector).each((_, elem) => {
-      const text = $(elem).text().trim();
-      if (text && text.length > MIN_TEXT_LENGTH && !texts.includes(text)) {
-        texts.push(text);
-      }
-    });
+    // Skip if inside a button or link
+    if ($elem.closest('[role="button"], a').length > 0) return;
+
+    const text = $elem.text().trim();
+
+    // Look for actual ad copy (medium length, not UI text)
+    if (text &&
+        text.length >= 20 &&
+        text.length <= 300 &&
+        !excludeTexts.some(exclude => text.includes(exclude))) {
+      texts.push(text);
+    }
+  });
+
+  // Return the first meaningful ad copy found
+  if (texts.length > 0) {
+    return texts[0];
   }
 
-  // Return the longest text found (likely the main ad copy)
-  return texts.sort((a, b) => b.length - a.length)[0] || '';
+  return '';
 }
 
 function extractCta($: cheerio.CheerioAPI): string | null {
-  // Look for CTA button text
-  const ctaSelectors = [
-    '[data-testid="cta-button"]',
-    'a[role="button"]',
-    'button span',
-    'div[role="button"] span',
-  ];
+  // Strategy: Find short actionable text in [role="button"] elements
+  const ctaPatterns = /^(Shop|Learn|Sign|Get|Download|Book|Buy|Join|Watch|Play|Start|See|View|Discover|Explore|Try|Order)/i;
+  const validCtas = ['Shop Now', 'Learn More', 'Sign Up', 'Get Started', 'Download', 'Book Now', 'Order now', 'Order Now'];
 
-  const MAX_CTA_LENGTH = 30;
+  // Look specifically in role="button" divs
+  const buttons = $('[role="button"]');
 
-  for (const selector of ctaSelectors) {
-    const text = $(selector).first().text().trim();
-    if (text && text.length > 0 && text.length <= MAX_CTA_LENGTH) {
-      return text;
+  for (let i = 0; i < buttons.length; i++) {
+    const text = $(buttons[i]).text().trim();
+
+    // CTA is short (5-25 chars) and actionable
+    if (text &&
+        text.length >= 3 &&
+        text.length <= 25 &&
+        (validCtas.includes(text) || ctaPatterns.test(text))) {
+      // Exclude domain names
+      if (!text.includes('.COM') && !text.includes('.com') && !text.includes('http')) {
+        return text;
+      }
     }
   }
 
@@ -173,17 +211,16 @@ function extractCta($: cheerio.CheerioAPI): string | null {
 }
 
 function extractDestinationUrl($: cheerio.CheerioAPI): string | null {
-  // Try to find the destination link
+  // Look for Facebook's link wrapper
   const linkSelectors = [
     'a[href*="l.facebook.com"]',
     'a[data-lynx-uri]',
-    'a[rel="nofollow noopener"]',
   ];
 
   for (const selector of linkSelectors) {
     const href = $(selector).first().attr('href');
     if (href && href.startsWith('http')) {
-      // Decode Facebook's link wrapper if present
+      // Decode Facebook's link wrapper
       try {
         const url = new URL(href);
         const destination = url.searchParams.get('u');

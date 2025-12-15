@@ -8,7 +8,7 @@
 	let isLoading = $state(false);
 	let error = $state('');
 
-	const API_URL = env.PUBLIC_API_URL || 'http://localhost:3000';
+	const API_URL = env.PUBLIC_API_URL || 'http://localhost:3002';
 
 	async function parseAd() {
 		if (!htmlInput.trim()) {
@@ -94,10 +94,11 @@
 					<h3>Instructions:</h3>
 					<ol>
 						<li>Visit <a href="https://www.facebook.com/ads/library/" target="_blank" rel="noopener">Meta Ad Library</a></li>
-						<li>Search for an advertiser or ad</li>
-						<li>Right-click on the ad card and select "Inspect"</li>
-						<li>Copy the HTML of the ad element</li>
-						<li>Paste it above and click "Parse & Preview"</li>
+						<li>Search for any advertiser (e.g., "Nike", "Spotify")</li>
+						<li>Filter by <strong>Instagram</strong> platform</li>
+						<li>Right-click on an ad → "Inspect"</li>
+						<li>Right-click the HTML element → "Copy element"</li>
+						<li>Paste above and click "Parse & Preview"</li>
 					</ol>
 				</div>
 			</div>

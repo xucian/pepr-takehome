@@ -54,13 +54,18 @@ instagram-mirror/
 ## Setup & Installation
 
 ### Prerequisites
-```bash
-nvm use 20.18.1
-```
+- Node.js 20.18.1+ (recommended via [NVM](https://github.com/nvm-sh/nvm))
+- npm (comes with Node.js)
 
 ### Quick Start (Recommended)
+
+**Step 1: Install everything**
 ```bash
-# One command to rule them all
+./install.sh
+```
+
+**Step 2: Run both servers**
+```bash
 ./run.sh
 ```
 
@@ -70,7 +75,7 @@ This will:
 - Start both servers concurrently
 
 **Servers:**
-- Backend: `http://localhost:3000`
+- Backend: `http://localhost:3002`
 - Frontend: `http://localhost:5173`
 
 **Stop:** Press `Ctrl+C` (stops both servers)
@@ -84,10 +89,10 @@ cp .env.example .env  # Copy environment template
 npm install
 npm run dev
 ```
-Runs on `http://localhost:3000`
+Runs on `http://localhost:3002`
 
 **Environment Variables:**
-- `PORT` - Server port (default: 3000)
+- `PORT` - Server port (default: 3002)
 - `NODE_ENV` - Environment (development/production)
 - `CORS_ORIGIN` - Allowed CORS origin (default: http://localhost:5173)
 
@@ -101,7 +106,7 @@ npm run dev
 Runs on `http://localhost:5173`
 
 **Environment Variables:**
-- `PUBLIC_API_URL` - Backend API URL (default: http://localhost:3000)
+- `PUBLIC_API_URL` - Backend API URL (default: http://localhost:3002)
 
 ### NPM Scripts (Alternative)
 ```bash

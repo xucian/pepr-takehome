@@ -28,7 +28,7 @@
 		<!-- Media content -->
 		<div class="story-media">
 			{#if adData.creative.mediaType === 'video'}
-				<video src={adData.creative.mediaUrl} controls autoplay muted loop>
+				<video src={adData.creative.mediaUrl} controls autoplay muted loop playsinline>
 					<track kind="captions" />
 				</video>
 			{:else}
@@ -42,7 +42,11 @@
 				{#if adData.creative.text}
 					<p class="ad-text">{adData.creative.text}</p>
 				{/if}
-				{#if adData.creative.cta}
+				{#if adData.creative.cta && adData.metadata.destinationUrl}
+					<a href={adData.metadata.destinationUrl} target="_blank" rel="noopener noreferrer" class="cta-link">
+						<button class="cta-button">{adData.creative.cta}</button>
+					</a>
+				{:else if adData.creative.cta}
 					<button class="cta-button">{adData.creative.cta}</button>
 				{/if}
 			</div>
@@ -145,6 +149,11 @@
 		object-fit: cover;
 	}
 
+	/* Video shouldn't cover overlays */
+	.story-media video {
+		position: relative;
+	}
+
 	.story-footer {
 		position: absolute;
 		bottom: 0;
@@ -164,6 +173,12 @@
 		line-height: 1.4;
 		margin: 0;
 		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+	}
+
+	.cta-link {
+		text-decoration: none;
+		width: 100%;
+		display: block;
 	}
 
 	.cta-button {

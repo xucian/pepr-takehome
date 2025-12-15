@@ -7,13 +7,13 @@
 #### 1. **Hardcoded API URL** ❌ → ✅
 **Before (Midwit):**
 ```typescript
-const API_URL = 'http://localhost:3000';  // Breaks in production
+const API_URL = 'http://localhost:3002';  // Breaks in production
 ```
 
 **After (Goated):**
 ```typescript
 import { env } from '$env/dynamic/public';
-const API_URL = env.PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = env.PUBLIC_API_URL || 'http://localhost:3002';
 ```
 - ✅ Environment-aware
 - ✅ Works in dev/prod

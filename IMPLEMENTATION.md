@@ -57,7 +57,7 @@ All requirements from SPEC.md have been successfully implemented and tested.
 - ✅ Parse endpoint with sample HTML
 - ✅ TypeScript compilation (backend)
 - ✅ Both servers running successfully
-  - Backend: http://localhost:3000
+  - Backend: http://localhost:3002
   - Frontend: http://localhost:5173
 
 ## Technical Decisions
@@ -182,7 +182,7 @@ Content-Type: application/json
 cd backend
 npm install
 npm run dev
-# Server runs on http://localhost:3000
+# Server runs on http://localhost:3002
 ```
 
 ### Terminal 2 - Frontend

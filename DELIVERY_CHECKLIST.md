@@ -69,7 +69,7 @@ npm run dev  # Start dev server
 ```
 
 **Expected Results:**
-- ✅ Backend starts on port 3000
+- ✅ Backend starts on port 3002
 - ✅ Frontend starts on port 5173
 - ✅ UI loads without errors
 - ✅ Can parse HTML and display story
@@ -143,7 +143,7 @@ cd frontend && npm run dev &
 sleep 5
 
 # Health check
-curl http://localhost:3000/health
+curl http://localhost:3002/health
 
 # Browser test
 open http://localhost:5173

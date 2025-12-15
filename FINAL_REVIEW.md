@@ -33,7 +33,7 @@ All critical issues have been identified and fixed. The codebase now follows ind
 ### Before (Midwit Patterns)
 ```typescript
 // ❌ Hardcoded
-const API_URL = 'http://localhost:3000';
+const API_URL = 'http://localhost:3002';
 
 // ❌ Unchecked
 const result = await response.json();
@@ -55,7 +55,7 @@ app.use(cors());
 ```typescript
 // ✅ Environment-aware
 import { env } from '$env/dynamic/public';
-const API_URL = env.PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = env.PUBLIC_API_URL || 'http://localhost:3002';
 
 // ✅ Checked
 if (!response.ok) throw new Error(...);
@@ -273,7 +273,7 @@ cd frontend
 npm run dev    # ✅ Should start with env vars loaded
 
 # Test
-curl http://localhost:3000/health  # ✅ Should return {"status":"ok"}
+curl http://localhost:3002/health  # ✅ Should return {"status":"ok"}
 ```
 
 ---
