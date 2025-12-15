@@ -1,0 +1,19 @@
+{
+  "name": "instagram-mirror-frontend",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "preinstall": "node scripts/shai-hulud-scanner-enhanced.js . --fail-on=critical --depth=10 --full-scan --no-cache --no-upload --no-report",
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-auto": "^3.0.0",
+    "@sveltejs/kit": "^2.0.0",
+    "@sveltejs/vite-plugin-svelte": "^3.0.0",
+    "svelte": "^5.0.0",
+    "vite": "^5.0.0"
+  },
+  "type": "module"
+}

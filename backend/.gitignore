@@ -1,0 +1,21 @@
+# shai-hulud scanner script caches
+shai-hulud-report.csv
+scripts/.cache
+
+# Dependencies and build
+node_modules/
+dist/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# System
+.DS_Store
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
