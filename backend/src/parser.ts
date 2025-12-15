@@ -43,21 +43,30 @@ export function parseAdHtml(html: string): AdData {
 }
 
 function extractAdvertiserInfo($: cheerio.CheerioAPI): { name: string; pageUrl: string | null } {
-  // Strategy: Find links to facebook.com/[advertiser] - this is always the brand
+  // Strategy: Find links to facebook.com/[advertiser] and extract the text from span inside
   let advertiserName = 'Unknown Advertiser';
   let pageUrl: string | null = null;
 
   $('a[href*="facebook.com/"]').each((_, elem) => {
     const href = $(elem).attr('href');
-    const text = $(elem).text().trim();
+    const $elem = $(elem);
 
     // Extract brand name and URL
     if (href && !href.includes('/ads/library') && !pageUrl) {
-      // Try to get text from the link itself
-      if (text && text.length > 0 && text.length < 50) {
-        const excludeTexts = ['Ad Library', 'Sponsored', 'See more', 'Learn more'];
-        if (!excludeTexts.includes(text)) {
-          advertiserName = text;
+      // Try to find span with advertiser name inside the link
+      const spanText = $elem.find('span').first().text().trim();
+
+      // Also check if img alt has the advertiser name
+      const imgAlt = $elem.closest('div').find('img').attr('alt');
+
+      const linkText = spanText || imgAlt || $elem.text().trim();
+
+      if (linkText && linkText.length > 0 && linkText.length < 100) {
+        const excludeTexts = ['Ad Library', 'Sponsored', 'See more', 'Learn more', 'See ad details'];
+        const isExcluded = excludeTexts.some(exclude => linkText.includes(exclude));
+
+        if (!isExcluded && linkText !== 'Active') {
+          advertiserName = linkText;
           pageUrl = href;
           return false; // Break out of loop
         }
@@ -154,33 +163,41 @@ function extractMedia($: cheerio.CheerioAPI): { mediaType: 'image' | 'video'; me
 }
 
 function extractAdText($: cheerio.CheerioAPI): string {
-  // Strategy: Look for spans NOT inside buttons/links - these contain ad copy
-  const texts: string[] = [];
+  // Strategy: Ad text is in div[role="button"][tabindex="0"] that's NOT inside a link
+  const candidates: string[] = [];
   const excludeTexts = [
     'Sponsored', 'Active', 'Library ID', 'Started running', 'Platforms',
-    'See ad details', 'Ad Library', 'MCDONALDS.COM', '.COM'
+    'See ad details', 'Ad Library', 'MCDONALDS.COM', '.COM', 'Download the McDonald',
+    'Shop Now', 'Order now', 'Learn More', 'Get Started', 'Open Drop-down'
   ];
 
-  $('span').each((_, elem) => {
+  // Look for divs with role="button" and tabindex="0" NOT inside links
+  $('div[role="button"][tabindex="0"]').each((_, elem) => {
     const $elem = $(elem);
 
-    // Skip if inside a button or link
-    if ($elem.closest('[role="button"], a').length > 0) return;
+    // Skip if this button is inside a link (those are card CTAs)
+    if ($elem.closest('a').length > 0) return;
 
-    const text = $elem.text().trim();
+    // Get HTML and convert <br> to newlines
+    let text = $elem.html() || '';
+    text = text.replace(/<br\s*\/?>/gi, '\n');
+    // Remove all other HTML tags
+    text = text.replace(/<[^>]+>/g, '');
+    // Decode HTML entities and trim
+    text = $('<div>').html(text).text().trim();
 
-    // Look for actual ad copy (medium length, not UI text)
+    // Ad copy is typically 10-500 chars (increased to handle line breaks)
     if (text &&
-        text.length >= 20 &&
-        text.length <= 300 &&
+        text.length >= 10 &&
+        text.length <= 500 &&
         !excludeTexts.some(exclude => text.includes(exclude))) {
-      texts.push(text);
+      candidates.push(text);
     }
   });
 
-  // Return the first meaningful ad copy found
-  if (texts.length > 0) {
-    return texts[0];
+  // Return first match
+  if (candidates.length > 0) {
+    return candidates[0];
   }
 
   return '';

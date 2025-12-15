@@ -200,6 +200,7 @@
 		line-height: 1.4;
 		margin: 0;
 		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+		white-space: pre-wrap;
 	}
 
 	.cta-link {
