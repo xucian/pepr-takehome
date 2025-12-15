@@ -62,7 +62,7 @@ echo ""
 
 cd "$SCRIPT_DIR"
 npm install
-echo "   ✅ Root dependencies installed (concurrently, etc.)"
+echo "   ✅ Root dependencies installed"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -70,17 +70,9 @@ echo "📦 Step 2/3: Installing Backend"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Use subshell to preserve current directory
-(
-    cd "$SCRIPT_DIR/backend"
-    if [ -f install.sh ]; then
-        chmod +x install.sh
-        ./install.sh
-    else
-        echo "⚠️  backend/install.sh not found, running npm install..."
-        npm install
-    fi
-)
+cd "$SCRIPT_DIR/backend"
+npm install
+echo "   ✅ Backend dependencies installed"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -88,42 +80,15 @@ echo "📦 Step 3/3: Installing Frontend"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Use subshell to preserve current directory
-(
-    cd "$SCRIPT_DIR/frontend"
-    if [ -f install.sh ]; then
-        chmod +x install.sh
-        ./install.sh
-    else
-        echo "⚠️  frontend/install.sh not found, running npm install..."
-        npm install
-    fi
-)
+cd "$SCRIPT_DIR/frontend"
+npm install
+echo "   ✅ Frontend dependencies installed"
 
 echo ""
 echo "╔════════════════════════════════════════════════════════════╗"
 echo "║                  ✅ Installation Complete!                 ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
-echo "📊 Summary:"
-echo "   ✅ Root dependencies (concurrently)"
-echo "   ✅ Backend (Node.js + Express + Cheerio + TypeScript)"
-echo "   ✅ Frontend (SvelteKit + Svelte 5 + Vite)"
-echo "   ✅ Environment files (.env created from templates)"
-echo ""
-echo "🚀 Next Steps:"
-echo ""
-echo "   Start both servers:"
+echo "🚀 Start the servers:"
 echo "   $ ./run.sh"
-echo ""
-echo "   Or start individually:"
-echo "   $ cd backend && npm run dev    # Backend on :3000"
-echo "   $ cd frontend && npm run dev   # Frontend on :5173"
-echo ""
-echo "   Or use npm scripts:"
-echo "   $ npm run dev                  # Both servers"
-echo ""
-echo "📚 Documentation:"
-echo "   - README.md       - Complete documentation"
-echo "   - QUICKSTART.md   - 1-minute quick start"
 echo ""

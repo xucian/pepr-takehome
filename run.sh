@@ -2,7 +2,6 @@
 
 # Instagram Mirror - Development Runner
 # Starts both backend and frontend servers
-# Run ./install.sh first if this is your first time
 
 set -e
 
@@ -24,16 +23,6 @@ echo ""
 # Check if dependencies are installed
 if [ ! -d "node_modules" ] || [ ! -d "backend/node_modules" ] || [ ! -d "frontend/node_modules" ]; then
     echo "⚠️  Dependencies not installed!"
-    echo ""
-    echo "Please run: ./install.sh"
-    echo ""
-    exit 1
-fi
-
-# Check if .env files exist
-if [ ! -f "backend/.env" ] || [ ! -f "frontend/.env" ]; then
-    echo "⚠️  Environment files missing!"
-    echo ""
     echo "Please run: ./install.sh"
     echo ""
     exit 1
@@ -46,5 +35,5 @@ echo ""
 echo "Press Ctrl+C to stop both servers"
 echo ""
 
-# Run both servers
-npm run dev
+# Set environment variables and run both servers
+PORT=3002 NODE_ENV=development CORS_ORIGIN=http://localhost:5173 PUBLIC_API_URL=http://localhost:3002 npm run dev
