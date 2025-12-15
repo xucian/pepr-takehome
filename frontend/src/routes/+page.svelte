@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
 	import InstagramStory from '$lib/components/InstagramStory.svelte';
-	import type { AdData, ParseAdResponse } from '$lib/types.js';
+	import type { AdData } from '$lib/types.js';
 
 	let htmlInput = $state('');
 	let adData = $state<AdData | null>(null);
@@ -30,17 +30,11 @@
 			});
 
 			if (!response.ok) {
-				const result: ParseAdResponse = await response.json();
-				throw new Error(result.error || `HTTP ${response.status}: ${response.statusText}`);
+				const errorData = await response.json();
+				throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
 			}
 
-			const result: ParseAdResponse = await response.json();
-
-			if (result.success && result.data) {
-				adData = result.data;
-			} else {
-				error = result.error || 'Failed to parse ad';
-			}
+			adData = await response.json();
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Network error occurred';
 		} finally {
@@ -100,6 +94,67 @@
 						<li>Right-click the HTML element → "Copy element"</li>
 						<li>Paste above and click "Parse & Preview"</li>
 					</ol>
+				</div>
+
+				<div class="api-docs">
+					<h3>API Documentation</h3>
+					<div class="api-section">
+						<h4>POST /api/parse-ad</h4>
+						<p>Parse Meta Ad Library HTML and extract structured ad data.</p>
+
+						<h5>Request:</h5>
+						<pre><code>POST {API_URL}/api/parse-ad
+Content-Type: application/json
+
+{'{'}
+  "html": "&lt;div class=\"xh8yej3\"&gt;...&lt;/div&gt;"
+{'}'}</code></pre>
+
+						<h5>Response (200 OK):</h5>
+						<pre><code>{JSON.stringify({
+  advertiser: {
+    name: "Nike",
+    profileImage: "https://...",
+    pageUrl: "https://facebook.com/nike"
+  },
+  creative: {
+    mediaType: "image",
+    mediaUrl: "https://...",
+    text: "Their game goes beyond...",
+    cta: "Shop Now"
+  },
+  metadata: {
+    platform: "instagram",
+    format: "story",
+    destinationUrl: "https://..."
+  }
+}, null, 2)}</code></pre>
+
+						<h5>Response (400/500 Error):</h5>
+						<pre><code>{JSON.stringify({
+  error: "No media content found in HTML"
+}, null, 2)}</code></pre>
+
+						<h5>Parameters:</h5>
+						<table>
+							<thead>
+								<tr>
+									<th>Field</th>
+									<th>Type</th>
+									<th>Required</th>
+									<th>Description</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td><code>html</code></td>
+									<td>string</td>
+									<td>✓</td>
+									<td>Meta Ad Library HTML content</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 				</div>
 			</div>
 
@@ -284,6 +339,84 @@
 
 	.instructions a:hover {
 		text-decoration: underline;
+	}
+
+	.api-docs {
+		margin-top: 24px;
+		padding: 20px;
+		background: #f9f9f9;
+		border-radius: 8px;
+		border-left: 4px solid #764ba2;
+	}
+
+	.api-docs h3 {
+		margin: 0 0 16px 0;
+		font-size: 1rem;
+		font-weight: 600;
+	}
+
+	.api-docs h4 {
+		margin: 16px 0 8px 0;
+		font-size: 1rem;
+		font-weight: 600;
+		color: #667eea;
+		font-family: 'Courier New', monospace;
+	}
+
+	.api-docs h5 {
+		margin: 16px 0 8px 0;
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: #555;
+	}
+
+	.api-docs p {
+		margin: 0 0 12px 0;
+		font-size: 14px;
+		color: #666;
+	}
+
+	.api-docs pre {
+		background: #1e1e1e;
+		color: #d4d4d4;
+		padding: 16px;
+		border-radius: 6px;
+		overflow-x: auto;
+		font-size: 13px;
+		line-height: 1.5;
+		margin: 8px 0 16px 0;
+	}
+
+	.api-docs code {
+		font-family: 'Courier New', monospace;
+	}
+
+	.api-docs table {
+		width: 100%;
+		border-collapse: collapse;
+		margin-top: 8px;
+		font-size: 13px;
+	}
+
+	.api-docs th {
+		background: #667eea;
+		color: white;
+		padding: 10px;
+		text-align: left;
+		font-weight: 600;
+	}
+
+	.api-docs td {
+		padding: 10px;
+		border: 1px solid #ddd;
+		background: white;
+	}
+
+	.api-docs td code {
+		background: #f0f0f0;
+		padding: 2px 6px;
+		border-radius: 3px;
+		color: #c7254e;
 	}
 
 	.story-wrapper {

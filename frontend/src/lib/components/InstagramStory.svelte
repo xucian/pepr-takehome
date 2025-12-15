@@ -2,6 +2,27 @@
 	import type { AdData } from '../types.js';
 
 	let { adData } = $props<{ adData: AdData | null }>();
+	let isMuted = $state(false);
+	let videoElement: HTMLVideoElement | null = $state(null);
+
+	function toggleMute() {
+		isMuted = !isMuted;
+		if (videoElement) {
+			videoElement.muted = isMuted;
+		}
+	}
+
+	function handleVideoLoad(element: HTMLVideoElement) {
+		videoElement = element;
+		// Try to play with sound, fall back to muted if blocked by browser
+		element.muted = false;
+		element.play().catch(() => {
+			// Browser blocked autoplay with sound, start muted
+			element.muted = true;
+			isMuted = true;
+			element.play();
+		});
+	}
 </script>
 
 {#if adData}
@@ -45,10 +66,36 @@
 			</div>
 		{/if}
 
+		<!-- Mute/Unmute button (top-right, only for video) -->
+		{#if adData.creative.mediaType === 'video'}
+			<button class="mute-button" onclick={toggleMute} aria-label={isMuted ? 'Unmute' : 'Mute'}>
+				{#if isMuted}
+					<!-- Muted speaker icon -->
+					<svg width="16" height="16" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M24 6L14 16H6V32H14L24 42V6Z" fill="white"/>
+						<line x1="30" y1="18" x2="42" y2="30" stroke="white" stroke-width="3" stroke-linecap="round"/>
+						<line x1="42" y1="18" x2="30" y2="30" stroke="white" stroke-width="3" stroke-linecap="round"/>
+					</svg>
+				{:else}
+					<!-- Unmuted speaker icon -->
+					<svg width="16" height="16" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M24 6L14 16H6V32H14L24 42V6Z" fill="white"/>
+						<path d="M32 16C34.5 18.5 36 21.5 36 24C36 26.5 34.5 29.5 32 32" stroke="white" stroke-width="3" stroke-linecap="round"/>
+						<path d="M36 10C40 14 42 19 42 24C42 29 40 34 36 38" stroke="white" stroke-width="3" stroke-linecap="round"/>
+					</svg>
+				{/if}
+			</button>
+		{/if}
+
 		<!-- Media content -->
 		<div class="story-media">
 			{#if adData.creative.mediaType === 'video'}
-				<video src={adData.creative.mediaUrl} controls autoplay muted loop playsinline>
+				<video
+					use:handleVideoLoad
+					src={adData.creative.mediaUrl}
+					loop
+					playsinline
+				>
 					<track kind="captions" />
 				</video>
 			{:else}
@@ -116,6 +163,36 @@
 
 	a.story-header:hover {
 		opacity: 0.9;
+	}
+
+	.mute-button {
+		position: absolute;
+		top: 16px;
+		right: 16px;
+		width: 40px;
+		height: 40px;
+		background: transparent;
+		border: none;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		z-index: 20;
+		transition: transform 0.2s;
+		padding: 0;
+	}
+
+	.mute-button:hover {
+		transform: scale(1.1);
+	}
+
+	.mute-button:active {
+		transform: scale(0.95);
+	}
+
+	.mute-button svg {
+		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
 	}
 
 	.profile-image {

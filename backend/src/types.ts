@@ -26,9 +26,3 @@ export interface AdData {
 export interface ParseAdRequest {
   html: string;
 }
-
-export interface ParseAdResponse {
-  success: boolean;
-  data?: AdData;
-  error?: string;
-}

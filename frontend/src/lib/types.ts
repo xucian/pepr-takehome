@@ -22,9 +22,3 @@ export interface AdData {
   creative: CreativeContent;
   metadata: AdMetadata;
 }
-
-export interface ParseAdResponse {
-  success: boolean;
-  data?: AdData;
-  error?: string;
-}
